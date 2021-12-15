@@ -1,83 +1,63 @@
 import * as THREE from '../node_modules/three/build/three.module.js'
-import { createSphere } from '/js/components/sphere.js';
-import { downloader } from './components/downloader.js';
-const scene = new THREE.Scene()
-const solarSystem = new THREE.Object3D()
-const earthOrbit = new THREE.Object3D()
-const moonOrbit = new THREE.Object3D()
-const mercuryOrbit = new THREE.Object3D()
-const wenusOrbit = new THREE.Object3D()
-const marsOrbit = new THREE.Object3D()
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+// import to ref
+import { OrbitControls } from './vendor_mods/three/examples/js/controls/OrbitControls.js'
 
-camera.position.set(80,30,0)
-camera.up.set(0,1,0)
-camera.lookAt(0,0,0)
-const color  = 0xFFFFFF
-const intesity = 3
-const light = new THREE.PointLight(color,intesity)
-const renderer = new THREE.WebGLRenderer({
-  preserveDrawingBuffer: true
-});
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+const createBorder = (width,depth = 0.10) => {
+  const geometry = new THREE.BoxGeometry(width,0.10,depth);
+  const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+  const border = new THREE.Mesh( geometry, material );
+  
+  return border
+}
+
+const makeFill = (width,depth,height) => {
+  const geometry = new THREE.BoxGeometry(width,0.5,depth);
+  const material = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
+  const fill = new THREE.Mesh( geometry, material );
+  return fill
+}
+
+const makeFrame = () => {
+  const frame = new THREE.Group()
+  frame.name = 'FRAME'
+  const border1 = createBorder(3) // base border
+  const border2 = createBorder(3)
+
+  border2.position.set(1.5,0,1.5)
+  border2.rotateY(33)
+
+  const border3 = createBorder(3)
+  border3.position.set(0,0,3)
+  const border4 = createBorder(3)
+  border4.position.set(-1.5,0,1.5)
+  border4.rotateY(33)
+  frame.add(border1,border2,border3,border4)
+  return frame
+}
+
+const shelf = new THREE.Group()
+shelf.name = 'SHELF'
+const fill = makeFill(3,3,3)
+const frame = makeFrame()
+frame.position.z = -1.5
+shelf.add(frame,fill)
+scene.add( shelf );
+
+
+camera.position.z = 5;
+const renderer = new THREE.WebGLRenderer();
+const controls = new OrbitControls( camera, renderer.domElement );
+
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-const objects = []
-
-const sunMesh = createSphere({emissive: 0xFFFF00})
-const earthMesh = createSphere({color: 0x2233FF, emissive: 0x112244})
-const moonMesh = createSphere({color: 0x888888, emissive: 0x222222})
-const mercuryMesh = createSphere({color: 0x8a805f, emissive: 0x423d2e})
-const wenusMesh = createSphere({color: 0xb59e59, emissive: 0x5c502c})
-const marsMesh = createSphere({color: 0x9e2626, emissive: 0x451010})
-
-earthOrbit.position.x = 40
-moonOrbit.position.x = 2
-mercuryOrbit.position.x = 10
-mercuryOrbit.position.z = 10
-wenusOrbit.position.x = 20
-wenusOrbit.position.z = -30
-marsOrbit.position.x = 50
-marsOrbit.position.z = -10
-sunMesh.scale.set(8,8,8)
-moonMesh.scale.set(.5, .5, .5);
-earthOrbit.scale.set(2,2,2)
-
-objects.push(solarSystem)
-objects.push(earthOrbit)
-
-function render(time) {
-   time *= 0.001;
-
-   objects.forEach((obj) => {
-     obj.rotation.y = time;
-    //  obj.rotation.x = time
-    //  obj.rotation.z = time
-   });
-   
-   renderer.render(scene, camera);
-
-   requestAnimationFrame(render);
- }
-
- 
-console.log(renderer)
 
 
-scene.add(solarSystem)
-
-solarSystem.add(sunMesh)
-solarSystem.add(earthOrbit)
-solarSystem.add(mercuryOrbit)
-solarSystem.add(wenusOrbit)
-solarSystem.add(marsOrbit)
-earthOrbit.add(earthMesh)
-earthOrbit.add(moonOrbit)
-mercuryOrbit.add(mercuryMesh)
-wenusOrbit.add(wenusMesh)
-marsOrbit.add(marsMesh)
-moonOrbit.add(moonMesh)
-scene.add(light)
-requestAnimationFrame(render);
-
-downloader("download frame","div",renderer)
+function animate() {
+	requestAnimationFrame( animate );
+  controls.update();
+	renderer.render( scene, camera );
+}
+animate();
